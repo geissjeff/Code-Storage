@@ -25,3 +25,11 @@ This repo contains the source code of all my projects that I was allowed to make
   - Repair Manual Librarian (**see Python->librarian_skill.py**)
 ### Coursework
 - ENGR 141/142: Engineering Innovation and Programming
+
+## Machine Learning/Computer Vision
+### Tensor Flow
+- Research Assistant to Smart Cities Team at Purdue
+## Hardware Definition Languages
+### ABEL/Verliog
+- ECE 270: Digital Design
+- Lab Teaching Assistant for ECE 270
