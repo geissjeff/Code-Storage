@@ -1,0 +1,19 @@
+Private Sub CommandButton21_Click() 'Overall Operations are run from this Code
+canrun = OpenFile 'if the file is opened then it is true
+Application.ScreenUpdating = False 'stops the screen from updating making the program faster
+Application.Calculation = xlCalculationManual
+If canrun Then
+AltDeleteExt 'Deletes extraneous information
+Setup 'Sets up the formatting on the workbook
+End If
+Application.ScreenUpdating = True ' Allows the screen to update
+If canrun Then
+Settings.Show 'Opens the Userform
+End If
+On Error Resume Next
+ ActiveWorkbook.Theme.ThemeColorScheme.Load ( _
+        "C:\Program Files (x86)\Microsoft Office\Document Themes 15\Theme Colors\Office 2007 - 2010.xml" _
+        )
+Application.Calculation = xlAutomatic
+End Sub
+
