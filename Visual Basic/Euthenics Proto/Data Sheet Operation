@@ -1,0 +1,24 @@
+Private Sub CommandButton1_Click()
+size = 15
+Sheets("Raw Data").Select
+Dim str As String
+str = TextBox2.Text
+Process (str)
+UserForm1.Show
+End Sub
+Private Sub CommandButton2_Click()
+Dim xName As String
+Dim xFound As Boolean
+xName = InputBox("Enter sheet name to refresh:", "Refresh Mean and RMSE")
+If xName = "" Then Exit Sub
+On Error Resume Next
+ActiveWorkbook.Sheets(xName).Select
+xFound = (Err = 0)
+On Error GoTo 0
+If xFound Then
+MsgBox "Sheet '" & xName & "' has been found and refreshed!"
+refreshData
+Else
+MsgBox "The sheet '" & xName & "' could not be found in this workbook!"
+End If
+End Sub
