@@ -1,0 +1,87 @@
+Function OpenFile() As Boolean 'Opens the file by clicking
+' Returns true if a file was opened
+Dim canrun As Boolean
+MsgBox ("Select the Text file")
+MyFile = Application.GetOpenFilename 'User selects a file and it stores the filename
+If StrComp(MyFile, "False", vbTextCompare) <> 0 Then 'If nothing is selected the file name will be "False"
+
+If Right(MyFile, 4) = ".csv" Then 'This covers if the file is not a text file
+Workbooks.OpenText filename:=MyFile _
+        , Comma:=True
+filenam = MyFile
+OpenFile = True
+Else: MsgBox ("Please select a .csv file")
+OpenFile = False
+End If
+Else: MsgBox ("No file was selected")
+OpenFile = False
+End If
+
+'TransferModule (MyFile) Possibility
+End Function
+
+
+Sub Setup() 'Adds all the necessary formatting information
+ActiveWorkbook.Sheets(1).Name = "Raw Data & Channels" ' Sheets
+ActiveWorkbook.Sheets.Add Before:=ActiveSheet
+ActiveWorkbook.Sheets(1).Name = "Operations"
+ActiveWorkbook.ActiveSheet.Buttons.Add(50, 32.25, 130, 43.5).Select ' Buttons
+Selection.OnAction = "'Auto-Process1.1.8.xlsm'!QuikChart" ' Note: Change the destination everytime you change the file name
+Selection.Characters.Text = "Quick Chart Tool"
+ActiveSheet.Buttons.Add(500, 32.25, 130, 43.5).Select
+Selection.OnAction = "'Auto-Process1.1.8.xlsm'!Transfer2"
+Selection.Characters.Text = "Adjust Settings"
+ActiveSheet.Buttons.Add(270, 32.25, 130, 43.5).Select
+Selection.OnAction = "'Auto-Process1.1.8.xlsm'!Transfer"
+Selection.Characters.Text = "Trim Timestamp Tool"
+'Need to Change Selection
+End Sub
+Sub TransferModule(file As String) ' The idea behind this code is to transfer the modules to the file.
+'That would allow the user to still use some operations without needed to keep this macro running
+Workbooks(1).VBProject.VBComponents(1).Export (file)
+Workbooks(2).VBProject.VBComponents.Import (file)
+End Sub
+Sub AltDeleteExt() 'More Efficiently Deletes the Extraneous Information
+Dim sht As range
+Set sht = ActiveSheet.UsedRange 'Captures all of the range that was changed
+Dim col As Integer
+Dim row As Integer
+Dim rng
+Set rng = sht.Find("time", , , , xlByRows) ' returns the location of the string "time" not case sensitive
+
+If (rng Is Nothing) Then 'If "time" does not exist in the data
+MsgBox ("Unfortunately, this program cannot detect the string time.  Therefore, the deleting algorithim will not work.")
+MsgBox ("DO NOT USE ANY SETTINGS OR OPERATIONS until you manually set the data into the correct form!!")
+Exit Sub
+Else
+With rng
+col = .Column - 1 'subtracts 1 because all the columns and rows before "time" need to be deleted
+row = .row - 1
+End With
+''Following Code Deletes Ext Columns and Rows
+If (row = 1) Then 'exists because "1:1" outputs an error
+Rows(1).Delete
+Else
+If (row > 1) Then
+Rows("1:" & row).Delete
+End If
+End If
+
+If (col = 1) Then 'exists because "1:1" outputs an error
+Columns(1).Delete
+Else
+If (col > 1) Then
+Columns("1:" & col).Delete
+End If
+
+End If
+Dim cCount As Integer
+cCount = 1
+Do While Cells(2, cCount).Value <> ""  ' Eliminates Alarms
+        If Left(Cells(1, cCount).Value2, 5) = "Alarm" Then 'They occur every other time
+        Columns(cCount).Delete
+        End If
+        cCount = cCount + 1
+    Loop
+End If
+End Sub
