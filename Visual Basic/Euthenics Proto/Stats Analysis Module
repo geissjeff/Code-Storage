@@ -1,0 +1,279 @@
+Public Points As Integer
+Public size As Integer
+
+Sub Process(prefix As String)
+'Completes the table and creates the number of sheets
+Application.ScreenUpdating = False 'speeds up code analysis
+Sheets(2).Select
+Dim iter As Integer
+iter = 0 'Point number
+Dim sum As Double
+Dim Avg(1 To 3) As Double
+Dim Med(1 To 3) As Double
+Dim MAD(1 To 3) As Double
+Dim actrng As Range
+Dim medrng As Range
+Dim maxrng As Range
+Do While (Cells(2 + iter * size, 1) <> "")
+    For nxt = 0 To 2 'Goes through each point and develops data until z-score
+        Set actrng = Range(Cells(2 + iter * size, 2 + nxt), Cells(1 + (iter + 1) * size, 2 + nxt))
+        sum = 0
+        For Each Cell In actrng
+            sum = Cell.Value + sum
+        Next Cell
+        Med(nxt + 1) = Application.WorksheetFunction.Median(actrng)
+        Avg(nxt + 1) = sum / size
+        For Each Cell In actrng
+            Cells(Cell.Row, 6 + nxt) = (Cell.Value - Avg(nxt + 1)) ^ 2
+            Cells(Cell.Row, 9 + nxt) = Abs(Cell.Value - Med(nxt + 1))
+        Next Cell
+    Next
+    'Calculates modified z-score
+    For nxt = 0 To 2
+        Set actrng = Range(Cells(2 + iter * size, 2 + nxt), Cells(1 + (iter + 1) * size, 2 + nxt))
+        Set medrng = Range(Cells(2 + iter * size, 9 + nxt), Cells(1 + (iter + 1) * size, 9 + nxt))
+        MAD(nxt + 1) = Application.WorksheetFunction.Median(medrng)
+        For Each Cell In actrng
+            Cells(Cell.Row, 12 + nxt) = Abs(0.6745 * (Cell.Value - Med(nxt + 1)) / MAD(nxt + 1))
+        Next Cell
+    Next
+    'Calculates maximum z-score
+    For Each Cell In actrng
+        Set maxrng = Range(Cells(Cell.Row, 12), Cells(Cell.Row, 14))
+        Cells(Cell.Row, 15) = Application.WorksheetFunction.Max(maxrng)
+    Next Cell
+    
+    'Creates each sheet per point
+    Call CreateAndPopulate(iter, prefix)
+    
+    
+    
+    Set actrng = Range(Cells(2 + iter * size, 1), Cells(1 + (iter + 1) * size, 15))
+    Set maxrng = Range(Cells(2 + iter * size, 15), Cells(1 + (iter + 1) * size, 15))
+    
+    
+    'Sorts the range
+    ActiveWorkbook.Worksheets("Raw Data").Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("Raw Data").Sort.SortFields.add Key:= _
+        maxrng, SortOn:=xlSortOnValues, Order:=xlDescending, DataOption:= _
+        xlSortNormal
+    With ActiveWorkbook.Worksheets(2).Sort
+        .SetRange actrng
+        .Header = xlNo
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    iter = iter + 1
+Loop
+Points = iter
+If Points > 100 Then
+MsgBox "There are too many points. The limit is 100 points"
+End If
+Application.ScreenUpdating = True
+End Sub
+Sub FormatSheets()
+'NO LONGER ACTIVE USE ONLY AS A REFERENCE+
+
+
+'Creates a sheet for each point by copying the template
+'Populates Sheet with data
+'Augments header
+Application.ScreenUpdating = False
+iter = 0
+Dim fieldrng As Range
+Dim actrng As Range
+Dim ptname As String
+Do While (iter < Points)
+Set fieldrng = Range(Cells(2 + iter * size, 1), Cells(1 + (iter + 1) * size, 1))
+Set actrng = Range(Cells(2 + iter * size, 1), Cells(1 + (iter + 1) * size, 15))
+    ActiveWorkbook.Worksheets("Raw Data").Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("Raw Data").Sort.SortFields.add Key:=fieldrng, SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+    With ActiveWorkbook.Worksheets("Raw Data").Sort
+        .SetRange actrng
+        .Header = xlNo
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    ptname = Left(Cells(2 + iter * size, 1).Text, 3)
+    'Copies the next
+    Sheets("Template").Copy After:=Sheets(3)
+    ActiveSheet.Name = "C.P. " & ptname
+    ActiveSheet.Range("A1:H1").Activate
+    ActiveCell.Value = ActiveCell.Text & " " & ptname
+    count = 0
+    Do While Sheets(2).Cells(2 + iter * size + count, 1) <> ""
+        count = count + 1
+    Loop
+    If count > 15 Then
+    count = 15
+    End If
+    'Copies oberservation number
+    Range(ActiveSheet.Cells(10, 1), ActiveSheet.Cells(9 + count, 1)).Value = _
+    Range(Sheets(2).Cells(2 + iter * size, 1), Sheets(2).Cells(1 + iter * size + count, 1)).Value
+    'Copies data
+    Range(ActiveSheet.Cells(10, 3), ActiveSheet.Cells(9 + count, 5)).Value = _
+    Range(Sheets(2).Cells(2 + iter * size, 2), Sheets(2).Cells(1 + iter * size + count, 4)).Value
+
+
+    For nxt = 0 To 2
+        Cells(27, 3 + nxt).Value = Application.WorksheetFunction.Average(Range(Cells(10, 3 + nxt), _
+        Cells(9 + count, 3 + nxt)))
+        
+        Cells(28, 3 + nxt).Value = Application.WorksheetFunction.StDev_P(Range(Cells(10, 3 + nxt), _
+        Cells(9 + count, 3 + nxt)))
+    Next
+    
+    'Calculates delta
+    For j = 0 To 2
+        For nxt = 0 To count - 1
+        Cells(10 + nxt, 6 + j).Value = (Cells(10 + nxt, 3 + j).Value - Cells(27, 3 + j).Value) ^ 2
+        Next
+    Next
+    For i = 1 To 15 - count
+    Rows(10 + count).Delete Shift:=xlUp
+    Next
+    Sheets(2).Activate
+iter = iter + 1
+Loop
+'Sorts the points
+'Determines name of point
+Application.Calculate
+Application.ScreenUpdating = True
+End Sub
+Sub CreateAndPopulate(ptnum As Integer, prefix As String)
+holder = Split(Cells(2 + ptnum * size, 1).Text, ".")
+ptname = holder(0)
+Dim Number As Integer
+Number = UBound(holder)
+If Number = 0 Or IsEmpty(Cells(2 + ptnum * size, 1).Value) Then
+    MsgBox "The point names need to be in the format 101.01 or 1010.02"
+    End
+End If
+
+If IsNumeric(holder(1)) Then
+    If CInt(holder(1)) <> 1 Then
+        MsgBox "Make sure that the readings are in the correct order."
+        End
+    End If
+End If
+Dim shtname As String
+If (EndsWith(prefix, " ")) Then
+shtname = prefix & ptname
+Else
+shtname = prefix & " " & ptname
+End If
+
+
+On Error Resume Next
+ActiveWorkbook.Sheets(shtname).Select
+xFound = (Err = 0)
+On Error GoTo 0
+If xFound Then
+MsgBox "You need to delete any sheets (ie " & shtname & " ) after the template. /nThe program has been stopped"
+End
+End If
+
+Sheets("Template").Copy After:=Sheets(3)
+ActiveSheet.Name = shtname
+Dim shtnum As Integer
+shtnum = 4
+'Copies the necessary raw data
+Range(Sheets(4).Cells(7, 1), Sheets(4).Cells(21, 1)) = _
+Range(Sheets(2).Cells(2 + ptnum * size, 1), Sheets(2).Cells(1 + (ptnum + 1) * size, 1)).Value
+
+
+Range(Sheets(4).Cells(7, 4), Sheets(4).Cells(21, 6)) = _
+Range(Sheets(2).Cells(2 + ptnum * size, 2), Sheets(2).Cells(1 + (ptnum + 1) * size, 4)).Value
+
+Range(Sheets(4).Cells(7, 7), Sheets(4).Cells(21, 9)) = _
+Range(Sheets(2).Cells(2 + ptnum * size, 6), Sheets(2).Cells(1 + (ptnum + 1) * size, 8)).Value
+
+ActiveSheet.Range("D23").FormulaR1C1 = "=AVERAGE(R[-16]C:R[-2]C)"
+ActiveSheet.Range("E23").FormulaR1C1 = "=AVERAGE(R[-16]C:R[-2]C)"
+ActiveSheet.Range("F23").FormulaR1C1 = "=AVERAGE(R[-16]C:R[-2]C)"
+ActiveSheet.Range("G24").FormulaR1C1 = "=SQRT(SUM(R[-17]C:R[-3]C)/COUNT(R[-17]C:R[-3]C))"
+ActiveSheet.Range("H24").FormulaR1C1 = "=SQRT(SUM(R[-17]C:R[-3]C)/COUNT(R[-17]C:R[-3]C))"
+ActiveSheet.Range("I24").FormulaR1C1 = "=SQRT(SUM(R[-17]C:R[-3]C)/COUNT(R[-17]C:R[-3]C))"
+Range("B2:F2").Activate
+ActiveCell.Value = ActiveCell.Text & " " & ptname
+
+Sheets(2).Activate
+End Sub
+Sub findPoint(ptsrmv As Integer, thispt As Integer)
+Sheets(3 + Points - (pt - 1)).Activate
+pt As Integer
+If ptsrmv > 0 Then
+    For i = 0 To (ptsrmv)
+    pt = rmdpts(i, thispt - 1)
+    Range(Cells(6 + pt, 1), Cells(6 + pt, 9)).Font.Strikethrough = True
+    Next i
+End If
+End Sub
+Sub cleanUpRawData()
+Sheets(2).Activate
+iter = 0
+Dim fieldrng As Range
+Dim actrng As Range
+Points = 2
+Set fieldrng = Range(Cells(2, 1), Cells(1 + (Points + 1) * size, 1))
+Set actrng = Range(Cells(2, 1), Cells(1 + (Points + 1) * size, 15))
+    ActiveWorkbook.Worksheets("Raw Data").Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("Raw Data").Sort.SortFields.add Key:=fieldrng, SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+        With ActiveWorkbook.Worksheets("Raw Data").Sort
+            .SetRange actrng
+            .Header = xlNo
+            .MatchCase = False
+            .Orientation = xlTopToBottom
+            .SortMethod = xlPinYin
+            .Apply
+         End With
+End Sub
+Sub refreshData()
+Dim count As Integer
+count = Worksheets.count
+Dim shtnum As Integer
+Dim sum As Double
+Dim numofPoints As Integer
+sum = 0
+numofPoints = 0
+Dim mean As Double
+Dim Delta As Double
+Dim rmse As Double
+For j = 0 To 2
+    For i = 0 To 15
+        If (Not Cells(7 + i, 4 + j).Font.Strikethrough) Then
+            sum = sum + Cells(7 + i, 4 + j).Value
+            numofPoints = numofPoints + 1
+        End If
+    Next i
+    mean = sum / numofPoints
+    
+    Cells(28, 2 + j).Value = mean
+    Delta = 0
+    For i = 0 To 15
+        If (Not Cells(7 + i, 4 + j).Font.Strikethrough) Then
+             Delta = Delta + (Cells(7 + i, 4 + j).Value - mean) * (Cells(7 + i, 4 + j).Value - mean)
+        End If
+    Next i
+    MsgBox ("Number of Point " & numofPoints)
+    rmse = Sqr(Delta / numofPoints)
+    MsgBox ("Delta is " & Delta & " RMSE is " & rmse)
+    Cells(29, 2 + j).Value = rmse
+    mean = 0
+    rmse = 0
+    sum = 0
+    numofPoints = 0
+Next j
+
+End Sub
+Public Function EndsWith(str As String, ending As String) As Boolean
+     
+     Dim endingLen As Integer
+     endingLen = Len(ending)
+     EndsWith = (Right(Trim(UCase(str)), endingLen) = UCase(ending))
+     
+End Function
