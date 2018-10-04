@@ -1,0 +1,142 @@
+Private rmdpts(15, 100) As Integer
+Private Sub UserForm_Activate()
+CalcValues (0)
+UpdateEst
+End Sub
+Private Sub Decrease_Click()
+iter = PointNumBox.Value - 1
+If PtsRemovedBox.Value <> 0 Then
+    PtsRemovedBox.Value = PtsRemovedBox.Value - 1
+    Dim actrng As Range
+    Set actrng = Range(Cells(2 + iter * size + PtsRemovedBox.Value, 1), Cells(2 + iter * size + PtsRemovedBox.Value, 15))
+    With actrng.Interior
+    .Pattern = xlNone
+    End With
+CalcValues (PtsRemovedBox.Value)
+Set actrng = Range(Cells(2 + iter * size + PtsRemovedBox.Value, 1), Cells(2 + iter * size + PtsRemovedBox.Value, 15))
+actrng.Select
+End If
+UpdateEst
+End Sub
+Private Sub CompleteAna_Click()
+'Clears Rows
+iter = PointNumBox.Value - 1
+If PtsRemovedBox.Value > 0 Then
+    Dim delrng As Range
+    Set delrng = Range(Cells(2 + iter * size, 1), Cells(2 + iter * size + PtsRemovedBox.Value - 1, 15))
+    Dim total As String
+    Dim add As Integer
+    'Takes an string and finds the reading number
+    For i = 0 To PtsRemovedBox.Value - 1
+        total = Cells(2 + iter * size + i, 1).Text
+        last = Split(total, ".")
+        last = last(1)
+        If (IsNumeric(last)) Then
+        If (StrComp(last, "1", vbTextCompare) = 0) Then
+        j = 10
+        Else
+        j = CInt(last)
+        End If
+        rmdpts(i, PointNumBox.Value - 1) = j
+        Else
+        MsgBox (last & " Could not be converted to an integer")
+        End If
+    Next i
+    'Strikethrough deleted points
+    Sheets(3 + Points - (PointNumBox.Value - 1)).Activate
+    For i = 0 To (PtsRemovedBox.Value)
+        pt = rmdpts(i, PointNumBox.Value - 1)
+        If (pt <> 0) Then
+        Range(Cells(6 + pt, 1), Cells(6 + pt, 9)).Font.Strikethrough = True
+        End If
+    Next i
+    Sheets(2).Activate
+    delrng.Clear
+End If
+'Add the cordinate means and rmse
+shtnum = 3 + Points - (PointNumBox.Value - 1)
+Dim rnrng As Range
+For i = 0 To 2
+    Set rnrng = Range(Cells(2 + iter * size + PtsRemovedBox.Value, 2 + i), Cells(1 + (iter + 1) * size, 2 + i))
+    mean = WorksheetFunction.Average(rnrng)
+    Sheets(shtnum).Cells(28, 2 + i).Value = mean
+    Sheets(shtnum).Cells(29, 2 + i).Value = WorksheetFunction.StDev_P(rnrng)
+Next i
+Sheets(shtnum).Calculate
+PointNumBox.Value = PointNumBox.Value + 1
+If PointNumBox.Value > Points Then
+
+    Application.Run ("cleanUpRawData")
+    
+    Unload Me
+End If
+PtsRemovedBox.Value = 0
+CalcValues (0)
+Dim actrng As Range
+Set actrng = Range(Cells(2 + (iter + 1) * size, 1), Cells(2 + (iter + 1) * size, 15))
+actrng.Select
+UpdateEst
+End Sub
+
+Private Sub Increase_Click()
+PtsRemovedBox.Value = PtsRemovedBox.Value + 1
+remov = PtsRemovedBox.Value
+iter = PointNumBox.Value - 1
+Dim actrng As Range
+Set actrng = Range(Cells(2 + iter * size + PtsRemovedBox.Value - 1, 1), Cells(2 + iter * size + PtsRemovedBox.Value - 1, 15))
+    With actrng.Interior
+        .Pattern = xlSolid
+        .PatternColorIndex = xlAutomatic
+        .Color = 65535
+        .TintAndShade = 0
+        .PatternTintAndShade = 0
+    End With
+CalcValues (remov)
+Set actrng = Range(Cells(2 + iter * size + PtsRemovedBox.Value, 1), Cells(2 + iter * size + PtsRemovedBox.Value, 15))
+actrng.Select
+UpdateEst
+End Sub
+Private Sub CalcValues(remov As Integer)
+Dim actrng As Range
+iter = PointNumBox.Value - 1
+For nxt = 0 To 2
+    Set actrng = Range(Cells(2 + iter * size + remov, 2 + nxt), Cells(1 + (iter + 1) * size, 2 + nxt))
+    If nxt = 0 Then
+        NorMeanBox.Value = Round(Application.WorksheetFunction.Average(actrng) - Application.WorksheetFunction.RoundDown(Application.WorksheetFunction.Average(actrng), 0), 4)
+        If remov = 0 Then
+            NorORMSEBox.Value = Round(Application.WorksheetFunction.StDev_P(actrng), 6)
+        End If
+        NorNRMSEBox.Value = Round(Application.WorksheetFunction.StDev_P(actrng), 6)
+    End If
+    If nxt = 1 Then
+        EastMeanBox.Value = Round(Application.WorksheetFunction.Average(actrng) - Application.WorksheetFunction.RoundDown(Application.WorksheetFunction.Average(actrng), 0), 4)
+        If remov = 0 Then
+            EastORMSEBox.Value = Round(Application.WorksheetFunction.StDev_P(actrng), 6)
+        End If
+        EastNRMSEBox.Value = Round(Application.WorksheetFunction.StDev_P(actrng), 6)
+    End If
+    If nxt = 2 Then
+        ElevMeanBox.Value = Round(Application.WorksheetFunction.Average(actrng) - Application.WorksheetFunction.RoundDown(Application.WorksheetFunction.Average(actrng), 0), 4)
+        If remov = 0 Then
+            ElevORMSE.Value = Round(Application.WorksheetFunction.StDev_P(actrng), 6)
+        End If
+        ElevNRMSE.Value = Round(Application.WorksheetFunction.StDev_P(actrng), 6)
+    End If
+Next
+NorPerImp.Value = Format((NorORMSEBox.Value - NorNRMSEBox.Value) / (NorORMSEBox.Value), "Percent")
+EastPerImp.Value = Format((EastORMSEBox.Value - EastNRMSEBox.Value) / (EastORMSEBox.Value), "Percent")
+ElevPerImp.Value = Format((ElevORMSE.Value - ElevNRMSE.Value) / ElevORMSE.Value, "Percent")
+Zscore.Value = Round(Cells(2 + iter * size + remov, 15).Value, 4)
+If (Cells(2 + iter * size + remov, 12).Value > _
+Cells(2 + iter * size + remov, 13).Value) And (Cells(2 + iter * size + remov, 12).Value > _
+Cells(2 + iter * size + remov, 14).Value) Then
+CoordType.Value = "Northing"
+ElseIf Cells(2 + iter * size + remov, 13).Value > Cells(2 + iter * size + remov, 14).Value Then
+CoordType.Value = "Easting"
+Else
+CoordType.Value = "Elevation"
+End If
+End Sub
+Private Sub UpdateEst()
+EstPerChang.Value = Sheets(1).Cells(2 + PtsRemovedBox.Value, 14).Text
+End Sub
