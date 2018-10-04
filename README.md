@@ -4,7 +4,7 @@ This repo contains the source code of all my projects that I was allowed to make
 
 ## Java
 ### Coursework
-- AP Computer Science
+- AP Computer Science (First programming language)
 - ECE 368: Data Structures and Algorithms
 - CS 180: Programming I
   - Built 2048 Game
