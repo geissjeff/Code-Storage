@@ -11,9 +11,17 @@ This repo contains the source code of all my projects that I was allowed to make
 ## C
 ### Projects
 - ECE 362: Embedded Systems and Peripherals
-  - GameMaster(**see Assembly C Projects**)
+  - GameMaster(**see Assembly C->GameMaster.c**)
 ### Coursework
-  - ENGR 141/142: Engineering Innovation
+  - ENGR 141/142: Engineering Innovation and Programming
+    - Robotic controls for Freshman Design
   - ECE 264: Advanced C Programming
   - CS 240: C Programming
     - Built IRC Client and Server
+## Python
+### Projects
+- Amazon Alexa Skills
+  - Acronym Bot
+  - Repair Manual Librarian (**see Python->librarian_skill.py**)
+### Coursework
+- ENGR 141/142: Engineering Innovation and Programming
