@@ -1,0 +1,259 @@
+Sub RemoveFaulty() 'Designed to remove faulty channels using statistic analysis
+''Please Note that two methods of analysis are used
+'First, if the median of the data is over 1000*the interquartile range
+'Second, if the range is too large (spiking problems) This is currently underdevelopment
+
+Dim length As Integer 'Stores the number of channels
+length = 1
+Do While (Not (IsEmpty(Sheets(2).Cells(1, length))))
+length = length + 1
+Loop
+
+length = length - 2
+Dim ranges() As Double ' stores the ranges of each channel
+ReDim ranges(length) 'Needs to happen because of the way arrays are declared
+'Dim removes() As Integer 'tells which channels to remove
+'ReDim Preserve removes(length)
+Dim count As Integer
+count = 2
+Dim sumavg As Double
+sumavg = 0
+Do While (count <> length + 2)
+Dim rng As range
+Dim minimum As Double
+Dim maximum As Double
+'Set range from which to determine value
+Set rng = Sheets(2).Columns(count)
+'minimum = Application.WorksheetFunction.Min(rng)
+'maximum = Application.WorksheetFunction.Max(rng)
+
+Sheets(1).Cells(count - 1, 10).Value = Application.WorksheetFunction.Median(rng) ' stores the medians in sheet 1
+'records range
+ranges(count - 2) = (maximum - minimum)
+count = count + 1
+Loop
+Dim sht As Worksheet
+Set sht = Sheets(1)
+Dim med As Double
+Dim quart1 As Double
+Dim quart3 As Double
+Dim iqr As Double
+med = Application.WorksheetFunction.Median(range(sht.Cells(1, 10), sht.Cells(length, 10))) 'Calculates the median of the medians
+quart1 = Application.WorksheetFunction.Quartile(range(sht.Cells(1, 10), sht.Cells(length, 10)), 1) 'returns the first quartile entry
+quart3 = Application.WorksheetFunction.Quartile(range(sht.Cells(1, 10), sht.Cells(length, 10)), 3) 'returns the last quartile entry
+iqr = quart3 - quart1 'interquartile range
+count = 0
+Dim count2 As Integer
+count2 = 1
+Dim str As String
+str = "These channels were deleted: "
+Dim del As Boolean
+Do While (count <> length + 1)
+If (sht.Cells(count + 1, 10).Value > med + (1000 * iqr) Or sht.Cells(count + 1, 10).Value < med - (1000 * iqr)) Then
+If (count2 < 1) Then
+str = str & " ,"
+End If
+str = str & count + 1
+Sheets(2).Columns(count + 1 + count2).Delete
+count2 = count2 - 1
+End If
+count = count + 1
+Loop
+sht.range(Cells(1, 10), Cells(length, 10)).Clear
+Application.ScreenUpdating = True
+If (count2 < 1) Then
+MsgBox (str)
+End If
+
+End Sub
+Sub QuikChart() ' Creates a Column of Headers and Time in a seperate sheet at a certain time
+'User needs to input a time
+Dim tim As String
+tim = InputBox("Please copy the timestamp into this box", "Quick Chart") 'captures the timestamp
+If (tim <> "") Then 'covers if nothing is input
+If (Sheets.count > 2) Then ' If There are only 2 sheets then it adds a charts sheet
+
+    If (ActiveWorkbook.Sheets(3).Name <> "Charts") Then   'Adds a Charts Sheet if there are 3 sheets
+    ActiveWorkbook.Sheets.Add After:=Sheets(2)
+    ActiveWorkbook.Sheets(3).Name = "Charts"
+    End If
+    
+Else
+ActiveWorkbook.Sheets.Add After:=Sheets(2)
+ActiveWorkbook.Sheets(3).Name = "Charts"
+End If
+
+Dim loc As Long
+loc = 1
+
+Dim length As Integer 'Finds how many entries are in the data
+length = 1
+Do While (Not (IsEmpty(Sheets(2).Cells(length, 1))))
+length = length + 1
+Loop
+
+Dim rng As range
+Set rng = Sheets(2).Columns(1).Find(tim, , , , xlByColumns) 'returns the location of the timestamp
+If (rng Is Nothing) Then
+MsgBox ("There is no such timestamp")
+Exit Sub 'Ends Operation
+Else
+loc = rng.row
+End If
+Sheets(2).Activate 'Need to Activate Before Copying
+Sheets(2).range(Cells(loc, 1), Cells(loc, length - 1)).Copy ' Copies the Data onto the Clipboard
+Dim sh As Worksheet
+Set sh = Sheets("Charts")
+Dim here As Integer
+here = 2
+Dim placed As Boolean
+placed = False 'Becomes true when it finds a spot to make the chart
+Do While (Not placed)
+If (IsEmpty(sh.Cells(1, here)) And IsEmpty(sh.Cells(1, here - 1))) Then 'ensures no overlap in charts
+sh.Cells(1, here).PasteSpecial Paste:=xlPasteAll, Transpose:=True 'Places the data ''NOTE: The Paste All is important
+placed = True
+End If
+here = here + 2
+Loop
+
+Application.CutCopyMode = False
+Sheets(2).range(Cells(1, 1), Cells(1, length - 1)).Copy ' Gets the Headers
+sh.Cells(1, here - 3).PasteSpecial Paste:=xlPasteValues, Transpose:=True 'puts it in front of the data
+Application.CutCopyMode = False
+sh.Select
+End If
+End Sub
+Sub Transfer()
+Trim.Show
+End Sub
+Sub Simplify()
+Dim sht As Worksheet
+Set sht = Sheets(2)
+Dim temp As String
+Dim check As Integer
+Dim pos As Integer
+Dim count As Integer
+count = 2
+pos = 1
+Do While (Not (IsEmpty(sht.Cells(count, 1))))
+temp = sht.Cells(count, 1).Value
+check = 1
+Do While (check <> 0)
+check = InStr(check + 1, temp, "/")
+If (check <> 0) Then
+pos = check
+End If
+Loop
+If (pos <> 1) Then
+sht.Cells(count, 1).Value = Mid(temp, pos + 6)
+End If
+count = count + 1
+Loop
+
+End Sub
+Sub Interactive()
+Application.DisplayAlerts = False
+
+If (Sheets(Sheets.count).Name <> "Background Interactive") Then
+ActiveWorkbook.Sheets.Add After:=Sheets(Sheets.count)
+ActiveSheet.Name = "Interactive Graph"
+ActiveWorkbook.Sheets.Add After:=ActiveSheet
+ActiveSheet.Name = "Background Interactive"
+Else
+Sheets("Background Interactive").Delete
+Sheets("Interactive Graph").Delete
+ActiveWorkbook.Sheets.Add After:=Sheets(Sheets.count)
+ActiveSheet.Name = "Interactive Graph"
+ActiveWorkbook.Sheets.Add After:=ActiveSheet
+ActiveSheet.Name = "Background Interactive"
+End If
+
+Application.DisplayAlerts = True
+Sheets(2).Activate
+Dim length As Integer ' Number of channels
+length = 1
+Do While (Not (IsEmpty(Cells(1, length))))
+length = length + 1
+Loop
+
+Dim entr As Long ' Number entries
+entr = 1
+Do While (Not (IsEmpty(Cells(entr, 1))))
+entr = entr + 1
+Loop
+Dim rng As range
+
+Sheets(2).range(Cells(1, 1), Cells(entr - 1, length - 1)).Copy
+Sheets("Background Interactive").Activate 'Eliminate
+Cells(1, 1).PasteSpecial Paste:=xlPasteAll, Transpose:=True
+Set rng = Sheets("Background Interactive").range(Cells(1, 1), Cells(length - 1, entr - 1))
+ActiveSheet.Shapes.AddChart2(227, xlLine).Select
+ActiveChart.SetSourceData Source:=rng
+Application.CutCopyMode = False
+ActiveChart.Parent.Cut
+Sheets("Interactive Graph").Paste
+Application.CutCopyMode = False
+
+Sheets("Background Interactive").ListObjects.Add(xlSrcRange, rng, , xlYes).Name = _
+        "Setup"
+'range("Setup[#All]").Activate
+ActiveWorkbook.SlicerCaches.Add2(ActiveSheet.ListObjects("Setup"), "Time"). _
+        Slicers.Add Sheets("Interactive Graph"), , "Channels", "Channels", 196.5, 639.75, 144, 198.75
+Sheets("Interactive Graph").Activate
+With ActiveChart
+.ChartTitle.Text = ActiveWorkbook.Name
+.SetElement (msoElementPrimaryCategoryAxisTitleAdjacentToAxis)
+.SetElement (msoElementPrimaryValueAxisTitleAdjacentToAxis)
+.Axes(xlCategory, xlPrimary).AxisTitle.Text = Sheets(2).Cells(1, 1).Text
+With .Axes(xlValue)
+.HasTitle = True
+.AxisTitle.Text = "Data"
+End With
+End With
+End Sub
+Sub NormGraph()
+Dim rng As range
+Dim sh As Worksheet
+Set sh = Sheets(2)
+Dim length As Integer ' Number of channels
+length = 1
+Set rng = sh.UsedRange
+Do While (Not (IsEmpty(sh.Cells(1, length))))
+length = length + 1
+Loop
+Dim entr As Long ' Number entries
+entr = 1
+Do While (Not (IsEmpty(sh.Cells(entr, 1))))
+entr = entr + 1
+Loop
+sh.Activate
+Set rng = sh.range(sh.Cells(1, 1), sh.Cells(entr - 1, length - 1))
+Charts.Add2
+With ActiveChart
+.SetSourceData Source:=rng
+.ChartType = xlLine
+.ChartTitle.Text = ActiveWorkbook.Name
+.SetElement (msoElementPrimaryCategoryAxisTitleAdjacentToAxis)
+.SetElement (msoElementPrimaryValueAxisTitleAdjacentToAxis)
+.Axes(xlCategory).AxisTitle.Text = sh.Cells(1, 1).Text
+With .Axes(xlValue)
+.HasTitle = True
+.AxisTitle.Text = "Data"
+End With
+End With
+'ActiveSheet.Name = "Graph"
+
+If (Sheets.count > 3) Then
+If (Sheets(4).Name = "Charts") Then
+Sheets(2).Move After:=Sheets("Charts")
+Else
+Sheets(2).Move After:=Sheets(3)
+End If
+Else
+Sheets(2).Move After:=Sheets(3)
+End If
+End Sub
+Sub Transfer2()
+MsgBox ("Please choose which operations you want repeated")
+Settings.Show
+End Sub
