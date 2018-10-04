@@ -2,12 +2,11 @@
 """ simple fact sample app """
 import boto3
 
-SKILL_NAME = "Space Facts"
-GET_FACT_MESSAGE = "Here's your fact: "
-HELP_MESSAGE = "You can say tell me a space fact, or, you can say exit... What can I help you with?"
+SKILL_NAME = "Repair Manual Librarian"
+HELP_MESSAGE = "You can give me a description of the drawing or the bay location of the machine"
 HELP_REPROMPT = "What can I help you with?"
 STOP_MESSAGE = "Goodbye!"
-FALLBACK_MESSAGE = "The Space Facts skill can't help you with that.  It can help you discover facts about space if you say tell me a space fact. What can I help you with?"
+FALLBACK_MESSAGE = "The Repair Manual Librarian skill can't help you with that.  It can help you identify the drawer location of a repair manual. You can give me a description or a location. "
 FALLBACK_REPROMPT = 'What can I help you with?'
 
 # --------------- App entry point -----------------
