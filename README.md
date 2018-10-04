@@ -4,8 +4,8 @@ This repo contains the source code of all my projects that I was allowed to make
 
 ## Java
 ### Coursework
--AP Computer Science
--ECE 368: Data Structures and Algorithms
--CS 180: 
-  -Programmed 2048 Game
+- AP Computer Science
+- ECE 368: Data Structures and Algorithms
+- CS 180: 
+  - 2048 Game
 
