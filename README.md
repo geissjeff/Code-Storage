@@ -6,12 +6,13 @@ This repo contains the source code of all my projects that I was allowed to make
 ### Coursework
 - AP Computer Science (First programming language)
 - ECE 368: Data Structures and Algorithms
-- CS 180: Programming I
+- CS 180: Object-Oriented Programming
   - Built 2048 Game
 ## C
 ### Projects
 - ECE 362: Embedded Systems and Peripherals
   - GameMaster(**see Assembly C->GameMaster.c**)
+- Lake Erie Algae Sampler(under development)
 ### Coursework
   - ENGR 141/142: Engineering Innovation and Programming
     - Robotic controls for Freshman Design
@@ -27,6 +28,21 @@ This repo contains the source code of all my projects that I was allowed to make
 ### Coursework
 - ENGR 141/142: Engineering Innovation and Programming
 - Teaching Assistant to ENGR 141/142
+## Visual Basic
+### Projects
+- NASA: Thermal Data Processing (**see Visual Basic->NASA Auto-Process**)
+- General Electric: Quality Audit Tracker
+- General Electric: Digital Inventory Tracking System (not able to be released)
+- Euthencs: GPS Statistics Package (only first-pass prototype available) (**see Visual Basic-> Euthenics**)
+## MATLAB
+### Coursework
+- ECE 321:Electromotive Devices 
+  - Optimization of Electromotive Device Algorithm
+- ENGR 141/142: Engineering Innovation and Programming
+## Axure RP
+### Projects
+- Developed 7 features for GE Internship
+- Designed product for Habitat for Humanity Asset Management
 ## Machine Learning/Computer Vision
 ### Tensor Flow
 - Research Assistant to Smart Cities Team at Purdue
