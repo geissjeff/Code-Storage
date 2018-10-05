@@ -1,6 +1,6 @@
 # Project List
 
-This repo contains the source code of all my projects that I was allowed to make public.  I list my software experience under each subheading below. 
+This repo contains the source code of all my projects that I was allowed to make public.  I list my software experience under each subheading below. Please contact me if you would like to see some of my classwork. 
 
 ## Java
 ### Coursework
